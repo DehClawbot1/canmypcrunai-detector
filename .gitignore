@@ -4,3 +4,6 @@ build/
 dist/
 .env*
 hardware_profile.json
+
+apps/web/public/download/
+unix-hardware-profile.json
