@@ -38,6 +38,6 @@ Python 3.9 or newer is required. Build the inspectable Python zipapp with `pytho
 
 Run the downloaded paired `.pyz` file with `python3 /path/to/CanMyPCRunAI_<pairing>.pyz`. Keep the same browser tab open. For local inspection without uploading, add `--profile-only`.
 
-Apple Silicon uses shared system memory and Metal. Intel Macs use Ollama CPU inference. Linux reads NVIDIA memory through nvidia-smi and AMD capacity through sysfs; other missing GPU measurements stay unknown. Available RAM on macOS stays unknown. Disk space is measured on OLLAMA_MODELS, or the home volume when unset. No administrator access is requested.
+Apple Silicon uses shared system memory and Metal. Intel Macs use Ollama CPU inference. Linux reads NVIDIA memory through nvidia-smi and AMD capacity through sysfs; other missing GPU measurements stay unknown. Available RAM on macOS stays unknown. Disk space is measured on --models-dir or OLLAMA_MODELS, or the documented platform default when unset (home/.ollama/models on macOS, /usr/share/ollama/.ollama/models on Linux). No administrator access is requested.
 
 The Unix workflow tests actual Linux, Apple Silicon macOS, and Intel macOS runners. Upload smoke tests use a local loopback receiver and never the production website.

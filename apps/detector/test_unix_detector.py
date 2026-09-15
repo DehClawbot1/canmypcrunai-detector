@@ -57,6 +57,13 @@ class UnixHardwareTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             unix.upload({}, 'scan-' + 'a' * 16, 'b' * 32, 'http://example.com')
 
+    def test_model_directory_uses_platform_default_and_explicit_override(self):
+        with patch.object(unix.sys, 'platform', 'linux'), patch.dict(unix.os.environ, {}, clear=True):
+            self.assertEqual(unix.model_directory().as_posix(), '/usr/share/ollama/.ollama/models')
+            self.assertEqual(unix.model_directory('/models').as_posix(), '/models')
+        with patch.object(unix.sys, 'platform', 'darwin'), patch.dict(unix.os.environ, {}, clear=True), patch.object(Path, 'home', return_value=Path('/test-home')):
+            self.assertEqual(unix.model_directory(), Path('/test-home/.ollama/models'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -192,11 +192,18 @@ def mac_gpus(cpu, memory):
         return []
 
 
-def scan_system():
+def model_directory(override=None):
+    configured = override or os.environ.get('OLLAMA_MODELS')
+    if configured:
+        return Path(configured).expanduser()
+    return Path.home() / '.ollama' / 'models' if sys.platform == 'darwin' else Path('/usr/share/ollama/.ollama/models')
+
+
+def scan_system(models_dir=None):
     if sys.platform != 'darwin' and not sys.platform.startswith('linux'):
         raise RuntimeError('This download is for macOS and Linux. Use the Windows detector on Windows.')
     cpu, memory = cpu_info(), memory_info()
-    model_path = Path(os.environ.get('OLLAMA_MODELS') or (Path.home() / '.ollama' / 'models')).expanduser()
+    model_path = model_directory(models_dir)
     while not model_path.exists() and model_path != model_path.parent:
         model_path = model_path.parent
     free = shutil.disk_usage(model_path).free
@@ -235,9 +242,10 @@ def main():
     parser.add_argument('--profile-only', action='store_true', help='Print measured hardware JSON without uploading')
     parser.add_argument('--pairing-code', help='Optional fallback: the pairing code from the scan page')
     parser.add_argument('--server', default=None, help='Explicit development server override')
+    parser.add_argument('--models-dir', help='Measure free space on a custom model directory or drive')
     args = parser.parse_args()
     try:
-        profile = scan_system()
+        profile = scan_system(args.models_dir)
         if args.profile_only:
             print(json.dumps(profile, indent=2))
             return 0
