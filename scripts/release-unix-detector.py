@@ -15,6 +15,7 @@ with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as bundle:
     files['__main__.py'] = b'from unix_detector import main\nraise SystemExit(main())\n'
     for name, content in sorted(files.items()):
         entry = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
+        entry.create_system = 3  # Stable ZIP metadata even when built on Windows.
         entry.compress_type = zipfile.ZIP_DEFLATED
         entry.external_attr = 0o644 << 16
         bundle.writestr(entry, content)
