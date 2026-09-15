@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+build/
+dist/
+.env*
+hardware_profile.json
