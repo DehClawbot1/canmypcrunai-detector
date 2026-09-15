@@ -6,6 +6,7 @@ Unknown measurements remain None. Device IDs are used locally, never uploaded.
 """
 import argparse
 import csv
+import ctypes
 import io
 import json
 import os
@@ -155,10 +156,30 @@ def linux_gpus(root=Path('/sys/class/drm')):
     return cards + list(nvidia.values())
 
 
+def metal_available():
+    """Probe an actual Metal device, including inside a macOS virtual machine."""
+    try:
+        metal = ctypes.CDLL('/System/Library/Frameworks/Metal.framework/Metal')
+        metal.MTLCreateSystemDefaultDevice.restype = ctypes.c_void_p
+        metal.MTLCreateSystemDefaultDevice.argtypes = []
+        device = metal.MTLCreateSystemDefaultDevice()
+        if not device:
+            return False
+        objc = ctypes.CDLL('/usr/lib/libobjc.A.dylib')
+        objc.sel_registerName.restype = ctypes.c_void_p
+        objc.sel_registerName.argtypes = [ctypes.c_char_p]
+        objc.objc_msgSend.restype = None
+        objc.objc_msgSend.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+        objc.objc_msgSend(device, objc.sel_registerName(b'release'))
+        return True
+    except (OSError, AttributeError):
+        return False
+
+
 def mac_gpus(cpu, memory):
     if memory['unified']:
         # The M-series GPU is on this measured chip and shares system memory.
-        return [gpu_record('Apple', cpu['model'], 0, ['metal'], 'APPLE_UNIFIED_MEMORY')]
+        return [gpu_record('Apple', cpu['model'], 0, ['metal'] if metal_available() else ['cpu'], 'APPLE_UNIFIED_MEMORY')]
     try:
         displays = json.loads(command(['system_profiler', 'SPDisplaysDataType', '-json'])).get('SPDisplaysDataType', [])
         cards = []

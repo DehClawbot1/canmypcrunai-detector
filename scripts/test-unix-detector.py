@@ -38,7 +38,8 @@ assert profile['cpu']['logicalCores'] >= profile['cpu']['physicalCores']
 assert profile['storage']['freeBytes'] >= 0
 if profile['os']['name'] == 'macOS' and profile['os']['arch'] == 'arm64':
     assert profile['memory']['unified']
-    assert profile['gpus'][0]['backends'] == ['metal']
+    # Virtual runners may not expose a Metal device; the detector probes it.
+    assert profile['gpus'][0]['backends'] in (['metal'], ['cpu'])
     assert profile['gpus'][0]['vramTotalBytes'] == 0
 assert 'serial' not in raw.decode().lower()
 (ROOT / 'unix-hardware-profile.json').write_bytes(raw)

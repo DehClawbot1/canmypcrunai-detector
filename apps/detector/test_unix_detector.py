@@ -12,9 +12,15 @@ class UnixHardwareTests(unittest.TestCase):
         with patch.object(unix.sys, 'platform', 'darwin'), patch.object(unix.platform, 'machine', return_value='arm64'), patch.object(unix, 'command', return_value=str(16 * 1024 ** 3)):
             memory = unix.memory_info()
         self.assertEqual(memory, {'totalBytes': 16 * 1024 ** 3, 'availableBytes': None, 'unified': True})
-        gpu = unix.mac_gpus({'model': 'Apple M2'}, memory)[0]
+        with patch.object(unix, 'metal_available', return_value=True):
+            gpu = unix.mac_gpus({'model': 'Apple M2'}, memory)[0]
         self.assertEqual(gpu['vramTotalBytes'], 0)
         self.assertEqual(gpu['backends'], ['metal'])
+
+    def test_apple_virtual_machine_without_metal_keeps_cpu_backend(self):
+        with patch.object(unix, 'metal_available', return_value=False):
+            gpu = unix.mac_gpus({'model': 'Apple M1 (Virtual)'}, {'unified': True})[0]
+        self.assertEqual(gpu['backends'], ['cpu'])
 
     def test_linux_memory_zero_and_missing_are_distinct(self):
         with patch.object(unix.sys, 'platform', 'linux'), patch.object(unix, 'read', return_value='MemTotal: 16000 kB\nMemAvailable: 0 kB'):
