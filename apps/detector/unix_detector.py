@@ -148,6 +148,11 @@ def linux_gpus(root=Path('/sys/class/drm')):
             except Exception:
                 pass
         name = name or vendor + ' GPU (model unknown)'
+        # lspci may wrap a measured marketing name in vendor/chip metadata.
+        # Preserve ambiguous model groups instead of choosing one card from them.
+        marketing_name = re.search(r'\[(Radeon [^\]\n]+|Instinct [^\]\n]+)\]', name)
+        if vendor == 'AMD' and marketing_name:
+            name = marketing_name.group(1)
         total = integer(read(device / 'mem_info_vram_total')) if vendor == 'AMD' else None
         # Driver residency counters are not a measurement of currently allocatable memory.
         capable = ['rocm', 'vulkan'] if vendor == 'AMD' else ['vulkan'] if vendor in ('Intel', 'NVIDIA') else []

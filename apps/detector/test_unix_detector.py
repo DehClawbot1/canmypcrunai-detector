@@ -52,6 +52,11 @@ class UnixHardwareTests(unittest.TestCase):
             self.assertEqual(gpu['vramTotalBytes'], 16 * 1024 ** 3)
             self.assertIsNone(gpu['vramAvailableBytes'])
             self.assertEqual(gpu['backends'], ['vulkan'])
+            (device / 'product_name').unlink()
+            with patch.object(unix, 'nvidia_by_bus', return_value={}), patch.object(unix.detector, 'detect_system_backends', return_value={'rocm', 'cpu'}), patch.object(unix, 'command', return_value='03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Navi 44 [Radeon RX 9060 XT] (rev c0)'):
+                gpu = unix.linux_gpus(root)[0]
+            self.assertEqual(gpu['model'], 'Radeon RX 9060 XT')
+            self.assertEqual(gpu['backends'], ['rocm'])
 
     def test_upload_rejects_insecure_remote_hosts_before_network_access(self):
         with self.assertRaises(ValueError):
